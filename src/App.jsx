@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useReducer } from 'react'
 import List from './components/List';
 import Search from './components/Search';
 import { useState } from 'react'
@@ -8,7 +8,8 @@ import useStorageState from './hooks/useStorageState';
 export default function App() {
 
   const [searchTerm, setSearchTerm] = useStorageState("searched", "");
-  const [allStories, setAllStories] = useState([])
+  const [allStories, dispatchStories] = useReducer(storiesReducer, [])
+  // const [allStories, setAllStories] = useState([])
   const [isError, setIsError] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
@@ -16,10 +17,11 @@ export default function App() {
     setIsLoading(true)
     getAsyncStories()
       .then(data => {
-        setAllStories(data)
+        dispatchStories({ type: "SET_STORIES", payload: data })
+        // setAllStories(data)
         setIsLoading(false)
       })
-      .catch(()=>{
+      .catch(() => {
         setIsError(true)
         setIsLoading(false)
       })
@@ -44,11 +46,21 @@ export default function App() {
     },
   ]
 
+  function storiesReducer(state, action) {
+    switch (action.type) {
+      case "SET_STORIES":
+        return action.payload
+      case "REMOVE_STORY":
+        return (state || []).filter((story) => story.id !== action.payload);
+      default:
+        return state;
+    }
+  }
+
   function getAsyncStories() {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
         resolve(data)
-        // reject()
       }, 2000)
     })
   }
@@ -58,8 +70,9 @@ export default function App() {
   }
 
   function removeItem(id) {
-    const filteredItems = allStories.filter(story => story.id != id)
-    setAllStories(filteredItems)
+    dispatchStories({ type: "REMOVE_STORY", payload: id })
+    // const filteredItems = allStories.filter(story => story.id != id)
+    // setAllStories(filteredItems)
   }
 
   const searchedItems = allStories.filter(story => {
@@ -72,7 +85,7 @@ export default function App() {
       <Search searchTerm={searchTerm} searching={searching} />
 
       {isLoading && <p>Loading...</p>}
-      {isError && <h3 style={{color:"red"}}>Something went wrong please try again later</h3>}
+      {isError && <h3 style={{ color: "red" }}>Something went wrong please try again later</h3>}
 
       <List onRemoveItem={removeItem} searchedItems={searchedItems} />
     </div>
