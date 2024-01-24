@@ -7,43 +7,31 @@ import useStorageState from './hooks/useStorageState';
 
 export default function App() {
 
+  const API_ENFPOINT = "https://fakestoreapi.com/products"
+
   const [searchTerm, setSearchTerm] = useStorageState("searched", "");
   const [allStories, dispatchStories] = useReducer(storiesReducer, {
     data: [],
     isError: false,
     isLoading: false
   })
-
-
+  
+  
   useEffect(() => {
+
     dispatchStories({ type: "STORIES_FETCH_INIT" })
-    getAsyncStories()
+
+    fetch(API_ENFPOINT)
+      .then(response => response.json())
       .then(data => {
         dispatchStories({ type: "STORIES_FETCH_SUCCESS", payload: data })
       })
-      .catch(() => {
+      .catch(()=>{
         dispatchStories({ type: "STORIES_FETCH_FAILED" })
       })
+
   }, [])
 
-  const data = [
-    {
-      id: 0,
-      title: "React",
-      url: "https://reactjs.org",
-      author: "Reza ahmadi",
-      num_comments: 3,
-      points: 4,
-    },
-    {
-      id: 1,
-      title: "Redux",
-      url: "https://redux.js.org",
-      author: "Mohammad kia",
-      num_comments: 2,
-      points: 5,
-    },
-  ]
 
   function storiesReducer(state, action) {
     switch (action.type) {
@@ -71,19 +59,11 @@ export default function App() {
           ...state,
           data: state.data.filter((story) => story.id !== action.payload)
         }
-      // return (state || []).filter((story) => story.id !== action.payload);
       default:
         return state;
     }
   }
 
-  function getAsyncStories() {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        resolve(data)
-      }, 2000)
-    })
-  }
 
   function searching(value) {
     setSearchTerm(value)
@@ -102,7 +82,7 @@ export default function App() {
     <div>
       <Search searchTerm={searchTerm} searching={searching} />
 
-      {allStories.isLoading && <p>Loading...</p>}
+      {allStories.isLoading && <h3 style={{marginLeft:"1rem"}}>Loading...</h3>}
       {allStories.isError && <h3 style={{ color: "red" }}>Something went wrong please try again later</h3>}
 
       <List onRemoveItem={removeItem} searchedItems={searchedItems} />
